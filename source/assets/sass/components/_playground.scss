@@ -311,6 +311,26 @@
   }
 }
 
+.sl-c-button--copy {
+  svg {
+    width: 1em;
+  }
+  .sl-c-playground-button--copy--copy {
+    display: inline-block;
+  }
+  .sl-c-playground-button--copy--copied {
+    display: none;
+  }
+  &.copied {
+    .sl-c-playground-button--copy--copied {
+      display: initial;
+    }
+    .sl-c-playground-button--copy--copy {
+      display: none;
+    }
+  }
+}
+
 // Make sure all tab bar buttons and text get the same padding
 [data-tabbar~='item'] {
   padding: var(--sl-gutter--half) var(--sl-gutter);

@@ -27,6 +27,7 @@ function setupPlayground() {
     inputValue: hashState.inputValue || '',
     debugOutput: [],
     selection: hashState.selection || null,
+    outputValue: '',
   };
 
   // Proxy intercepts setters and triggers side effects
@@ -170,15 +171,53 @@ function setupPlayground() {
     const copyURLButton = document.getElementById('playground-copy-url');
     const copiedAlert = document.getElementById('playground-copied-alert');
 
-    let timer: undefined | number;
+    type Timer = undefined | number;
+
+    let alertTimer: Timer;
+    const buttonTimers: {input: Timer; output: Timer; url: Timer} = {
+      input: undefined,
+      output: undefined,
+      url: undefined,
+    };
+
+    function showCopiedAlert(msg: string) {
+      if (!copiedAlert) return;
+      copiedAlert.innerText = msg;
+      copiedAlert.classList.add('show');
+      if (alertTimer) clearTimeout(alertTimer);
+      alertTimer = window.setTimeout(() => {
+        copiedAlert.classList.remove('show');
+      }, 3000);
+    }
+
+    function showCopiedIcon(button: 'input' | 'output' | 'url') {
+      const buttonEl = $(`#playground-copy-${button}`);
+      if (!buttonEl) return;
+      buttonEl.addClass('copied');
+      if (buttonTimers[button]) clearTimeout(buttonTimers[button]);
+      buttonTimers[button] = window.setTimeout(() => {
+        buttonEl.removeClass('copied');
+      }, 3000);
+    }
 
     copyURLButton?.addEventListener('click', () => {
       void navigator.clipboard.writeText(location.href);
-      copiedAlert?.classList.add('show');
-      if (timer) clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        copiedAlert?.classList.remove('show');
-      }, 3000);
+      showCopiedAlert('Copied URL to clipboard');
+      showCopiedIcon('url');
+    });
+
+    // Copy content handlers
+    const copyInputButton = document.getElementById('playground-copy-input');
+    copyInputButton?.addEventListener('click', () => {
+      void navigator.clipboard.writeText(playgroundState.inputValue);
+      showCopiedAlert('Copied input to clipboard');
+      showCopiedIcon('input');
+    });
+    const copyOutputButton = document.getElementById('playground-copy-output');
+    copyOutputButton?.addEventListener('click', () => {
+      void navigator.clipboard.writeText(playgroundState.outputValue);
+      showCopiedAlert('Copied output to clipboard');
+      showCopiedIcon('output');
     });
   }
   /**
@@ -258,6 +297,7 @@ function setupPlayground() {
         },
       });
       playgroundState.compilerHasError = false;
+      playgroundState.outputValue = result.css;
     } else {
       playgroundState.compilerHasError = true;
       playgroundState.debugOutput = [
